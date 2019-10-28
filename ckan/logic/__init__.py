@@ -437,7 +437,13 @@ def get_action(action):
         for func in reversed(func_list):
             # try other plugins first, fall back to core
             prev_func = fetched_actions.get(name, _actions.get(name))
-            fetched_actions[name] = functools.partial(func, prev_func)
+            wrapped_func = functools.partial(func, prev_func)
+
+            # we need to retain the side effect free behaviour
+            if getattr(func, 'side_effect_free', False):
+                wrapped_func.side_effect_free = True
+
+            fetched_actions[name] = wrapped_func
 
     # Use the updated ones in preference to the originals.
     _actions.update(fetched_actions)
